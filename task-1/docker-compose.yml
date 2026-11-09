@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: callzo-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: callzo
+      POSTGRES_PASSWORD: callzo_dev_password
+      POSTGRES_DB: callzo
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - callzo_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U callzo -d callzo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  callzo_postgres_data:
