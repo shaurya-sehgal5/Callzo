@@ -3,23 +3,61 @@ services:
     image: postgres:16-alpine
     container_name: callzo-postgres
     restart: unless-stopped
-
     environment:
       POSTGRES_USER: callzo
       POSTGRES_PASSWORD: callzo_dev_password
       POSTGRES_DB: callzo
-
     ports:
       - "5433:5432"
-
     volumes:
       - callzo_postgres_data:/var/lib/postgresql/data
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U callzo -d callzo"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  api:
+    build: .
+    container_name: callzo-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://callzo:callzo_dev_password@postgres:5432/callzo
+    command: >
+      sh -c "alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8080/ready')"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  worker:
+    build: .
+    container_name: callzo-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://callzo:callzo_dev_password@postgres:5432/callzo
+    command: ["python", "-m", "app.workers.event_worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
 
 volumes:
   callzo_postgres_data:
