@@ -91,7 +91,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function App() {
-  const [filters, setFilters] = useState<AccountFilters>(initialFilters);
+  const [filters, setFilters] = useState<AccountFilters>(readFiltersFromUrl);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -103,7 +103,9 @@ export default function App() {
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [summaryError, setSummaryError] = useState("");
 
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(
+    () => readFiltersFromUrl().search
+  );
 
   const totalPages = Math.max(1, Math.ceil(total / filters.page_size));
 
@@ -117,7 +119,38 @@ export default function App() {
     },
     []
   );
+  // Keep URL synchronized with table state.
+  useEffect(() => {
+    const params = new URLSearchParams();
 
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== "" && value !== initialFilters[key as keyof AccountFilters]) {
+        params.set(key, String(value));
+      }
+    });
+
+    const query = params.toString();
+    const nextUrl = query
+      ? `${window.location.pathname}?${query}`
+      : window.location.pathname;
+
+    window.history.replaceState(null, "", nextUrl);
+  }, [filters]);
+
+  // Restore table state when browser history changes.
+  useEffect(() => {
+    function handlePopState() {
+      const restored = readFiltersFromUrl();
+      setFilters(restored);
+      setSearchInput(restored.search);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
   // Server-side account data. Polling refreshes the current query
   // without clearing selection or resetting pagination.
   const loadAccounts = useCallback(
