@@ -1,5 +1,5 @@
 import logging
-
+from app.api.routes.accounts import router as accounts_router
 from fastapi import FastAPI
 from sqlalchemy import text
 
@@ -18,7 +18,7 @@ app = FastAPI(
 )
 
 app.include_router(webhook_router)
-
+app.include_router(accounts_router)
 
 @app.get("/health")
 def health():

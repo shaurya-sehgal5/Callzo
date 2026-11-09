@@ -1,3 +1,4 @@
+
 import uuid
 from datetime import date, datetime
 
@@ -20,37 +21,26 @@ class MonthlyUsage(Base):
     __tablename__ = "monthly_usage"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4,
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-
     account_id: Mapped[str] = mapped_column(
-        ForeignKey("accounts.id"),
-        nullable=False,
+        ForeignKey("accounts.id"), nullable=False
     )
-
-    billing_month: Mapped[date] = mapped_column(
-        Date,
-        nullable=False,
-    )
+    billing_month: Mapped[date] = mapped_column(Date, nullable=False)
 
     total_calls: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        nullable=False,
+        Integer, default=0, nullable=False
     )
-
     total_duration_seconds: Mapped[int] = mapped_column(
-        BigInteger,
-        default=0,
-        nullable=False,
+        BigInteger, default=0, nullable=False
+    )
+    total_cost_cents: Mapped[int] = mapped_column(
+        BigInteger, default=0, nullable=False
     )
 
-    total_cost_cents: Mapped[int] = mapped_column(
-        BigInteger,
-        default=0,
-        nullable=False,
+    # Money reserved for calls that are authorized but not yet settled.
+    reserved_cost_cents: Mapped[int] = mapped_column(
+        BigInteger, default=0, nullable=False
     )
 
     updated_at: Mapped[datetime] = mapped_column(
