@@ -133,7 +133,7 @@ export default function SettingsWizard({
     setDraft((current) => {
       const next = structuredClone(current);
 
-      (next[step as keyof SettingsDraft] as Record<string, unknown>)[field] =
+      (next[step as keyof SettingsDraft] as unknown as Record<string, unknown>)[field] =
         step === 3 && value !== "" ? Number(value) : value;
 
       latestDraft.current = next;
