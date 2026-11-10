@@ -1,3 +1,4 @@
+
 import type {
   AccountsResponse,
   AccountFilters,
@@ -22,18 +23,29 @@ async function request<T>(
   endpoint: string,
   signal?: AbortSignal
 ): Promise<T> {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    signal,
-    headers: {
-      Accept: "application/json",
-    },
-  });
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      signal,
+      headers: {
+        Accept: "application/json",
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error(`Request failed (${response.status})`);
+    if (!response.ok) {
+      throw new Error(`Request failed (${response.status})`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (
+      signal?.aborted ||
+      (error instanceof Error && error.name === "AbortError")
+    ) {
+      throw new DOMException("Request was cancelled", "AbortError");
+    }
+
+    throw error;
   }
-
-  return response.json();
 }
 
 export function getAccounts(

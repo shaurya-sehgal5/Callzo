@@ -1,0 +1,14 @@
+
+services:
+  mock-api:
+    image: meetrj/callzo-mock-usage-api
+    platform: linux/arm64
+    restart: unless-stopped
+
+  frontend:
+    image: shauryasehgal/callzo-task2:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      - mock-api
+    restart: unless-stopped

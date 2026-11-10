@@ -2,7 +2,7 @@ export type AccountStatus = "active" | "trial" | "suspended";
 export type Plan = "basic" | "pro" | "enterprise";
 
 export interface Account {
-  id: string;
+  id: number;
   name: string;
   email: string;
   company: string;

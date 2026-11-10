@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
+import SettingsWizard from "./components/settings/SettingsWizard";
 import { getAccounts, getSummary } from "./services/api";
 import type {
   Account,
@@ -94,8 +94,8 @@ export default function App() {
   const [filters, setFilters] = useState<AccountFilters>(readFiltersFromUrl);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [total, setTotal] = useState(0);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
   const [tableError, setTableError] = useState("");
 
@@ -166,7 +166,12 @@ export default function App() {
         setTotal(result.total);
         setTableError("");
       } catch (error) {
-        if (signal?.aborted) return;
+        if (
+          signal?.aborted ||
+          (error instanceof Error && error.name === "AbortError")
+        ) {
+          return;
+        }
 
         setTableError(
           error instanceof Error ? error.message : "Unable to load accounts"
@@ -227,7 +232,7 @@ export default function App() {
     return () => controller.abort();
   }, [loadSummary]);
 
-  function toggleSelection(id: string) {
+  function toggleSelection(id: number) {
     setSelected((previous) => {
       const next = new Set(previous);
 
@@ -550,19 +555,20 @@ export default function App() {
                       </button>
                     </th>
                   ))}
+                  <th className="px-4 py-3">Settings</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-16 text-center text-slate-500">
+                    <td colSpan={11} className="px-4 py-16 text-center text-slate-500">
                       Loading accounts...
                     </td>
                   </tr>
                 ) : accounts.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-16 text-center text-slate-500">
+                    <td colSpan={11} className="px-4 py-16 text-center text-slate-500">
                       No accounts match your filters.
                     </td>
                   </tr>
@@ -598,6 +604,15 @@ export default function App() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
                         {account.signup_date}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => setEditingAccount(account)}
+                          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium hover:bg-slate-100"
+                        >
+                          Configure
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -636,6 +651,14 @@ export default function App() {
           </div>
         </section>
       </div>
+
+      {editingAccount && (
+        <SettingsWizard
+          accountId={editingAccount.id}
+          accountName={editingAccount.name}
+          onClose={() => setEditingAccount(null)}
+        />
+      )}
     </main>
   );
 }
