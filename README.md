@@ -64,7 +64,7 @@ Run the tests using the instructions in `task-1/README.md`.
 Task 2 is a React and TypeScript admin console for browsing account usage, viewing usage summaries, and configuring account settings.
 
 The implementation covers:
-
+ 
 - Account table with pagination.
 - Search, filtering, and sorting.
 - Usage summary charts with independent error and retry handling.
